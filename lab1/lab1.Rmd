@@ -1,0 +1,233 @@
+---
+title: "Лабораторная работа №1"
+output: github_document
+---
+
+Подключим необходимые библиотеки
+
+```{r}
+library("psych")
+library("lmtest")
+library("ggplot2")
+library("dplyr")
+library("MASS")
+library("GGally")
+```
+
+## Первичный просмотр данных
+
+Импортируем датасет Cars93 (вариант № 5)
+
+```{r}
+data <- Cars93
+head(data, 10)
+```
+
+Посмотрим описание датасета
+
+```{r}
+glimpse(data)
+```
+
+Посмотрим описательные статистики датасета (среднее, мода, медиана, стандартное отклонение, минимум/максимум, асимметрия, эксцесс, и т. д.)
+
+```{r}
+describe(data)
+```
+
+Построим гистограмму для параметра Max.Price
+
+```{r}
+ggplot(data, aes(x = Max.Price)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Данные по продажам автомобилей в 1993 году в США",
+       x = "Максимальная цена (в 1000$)",
+       y = "Количество автомобилей")
+```
+
+Рассмотрим зависимость максимальной цены от количества лошадинных сил
+
+```{r}
+ggplot(data, aes(x = Max.Price,
+                 y = Horsepower)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(title = "Корреляционное поле",
+       x = "Максимальная цена (в 1000$)",
+       y = "Количество лс") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Рассмотрим зависимость максимальной цены от числа оборотов в минуту при максимальных лошадинных силах
+
+```{r}
+ggplot(data, aes(x = Max.Price,
+                 y = RPM)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(title = "Корреляционное поле",
+       x = "Максимальная цена (в 1000$)",
+       y = "Число оборотов в минуту") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Рассмотрим зависимость максимальной цены от пассажирской вместимости
+
+```{r}
+ggplot(data, aes(x = Max.Price,
+                 y = Passengers)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(title = "Корреляционное поле",
+       x = "Максимальная цена (в 1000$)",
+       y = "Пассажирская вместимость") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Построение парных регрессий, согласно варианту
+
+Построим парную регрессию Max.Price и Horsepower
+
+```{r}
+horsepower_model = lm(data = data, Max.Price ~ Horsepower)
+```
+
+Коэффициенты модели
+
+```{r}
+horsepower_model$coefficients
+```
+
+Уравнение модели
+
+```{r}
+horsepower_b0 = horsepower_model$coefficients[1]
+horsepower_b1 = horsepower_model$coefficients[2]
+
+equation_str <- sprintf("Max.Price = %f + %f * Horsepower", horsepower_b0, horsepower_b1)
+
+cat(equation_str)
+```
+
+Полное описание модели
+
+```{r}
+summary(horsepower_model)
+```
+
+Построим парную регрессию Max.Price и RPM
+
+```{r}
+rpm_model = lm(data = data, Max.Price ~ RPM)
+```
+
+Коэффициенты модели
+
+```{r}
+rpm_model$coefficients
+```
+
+Уравнение модели
+
+```{r}
+rpm_b0 = rpm_model$coefficients[1]
+rpm_b1 = rpm_model$coefficients[2]
+
+equation_str <- sprintf("Max.Price = %f + %f * RPM", rpm_b0, rpm_b1)
+
+cat(equation_str)
+```
+
+Полное описание модели
+
+```{r}
+summary(rpm_model)
+```
+
+Построим парную регрессию Max.Price и Passengers
+
+```{r}
+passengers_model = lm(data = data, Max.Price ~ Passengers)
+```
+
+Коэффициенты модели
+
+```{r}
+passengers_model$coefficients
+```
+
+Уравнение модели
+
+```{r}
+passengers_b0 = passengers_model$coefficients[1]
+passengers_b1 = passengers_model$coefficients[2]
+
+equation_str <- sprintf("Max.Price = %f + %f * Passengers", passengers_b0, passengers_b1)
+
+cat(equation_str)
+```
+
+Полное описание модели
+
+```{r}
+summary(passengers_model)
+```
+
+Как видим, из парных регрессий наилучшая - регрессия Max.Price и Horsepower
+
+## Построение множественной регрессии согласно варианту
+
+Построим корреляционную матрицу, диаграммы рассеяния и сглаженные распределения зависимостей Max.Price от Horsepower, RPM, Passengers
+
+```{r}
+ggpairs(data, 
+        columns = c("Max.Price", "Horsepower", "RPM", "Passengers"),         progress = F)
+```
+
+Построим регрессионную модель зависимости Max.Price от Horsepower, RPM, Passengers
+
+```{r}
+full_model = lm(data = data, Max.Price~Horsepower + RPM 
+                + Passengers)
+```
+
+Отобразим коэффициенты
+
+```{r}
+full_model$coefficients
+```
+
+Уравнение модели
+
+```{r}
+full_b0 = full_model$coefficients[1]
+full_b1 = full_model$coefficients[2]
+full_b2 = full_model$coefficients[3]
+full_b3 = full_model$coefficients[4]
+
+equation_str <- sprintf("Max.Price = %f + %f * Horsepower + %f * RPM + %f * Passengers", full_b0, full_b1, full_b2, full_b3)
+
+cat(equation_str)
+```
+
+Полное описание модели
+
+```{r}
+summary(full_model)
+```
+
+Как видно, новая модель чуть лучше модели, завязанной на Horsepower
+
+Построим предсказание, согласно варианту (Horsepower = 220, RPM = 6000, Passengers = 6)
+
+```{r}
+input = data.frame(Horsepower = 220, RPM = 6000, Passengers = 6)
+prediction = predict(full_model, input)
+prediction
+```
+
+```{r}
+prediction_str <- sprintf("Автомобиль с параметрами Horsepower = 220, RPM = 6000, Passengers = 6 будет иметь максимальную цену (параметр Max.Price) $%.2f)", prediction * 1000)
+
+cat(prediction_str)
+```
